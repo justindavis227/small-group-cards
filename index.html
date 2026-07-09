@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0EA5B7">
+<title>Small Group Cards — Southeast Students</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  :root{font-family:-apple-system,'Helvetica Neue',Arial,sans-serif}
+  html,body{height:100%}
+  body{background:#0f1115;color:#16181d;overflow:hidden}
+
+  /* ---------- HOME ---------- */
+  #home{height:100%;overflow-y:auto;background:#f4f6f8;-webkit-overflow-scrolling:touch;
+        padding:calc(env(safe-area-inset-top) + 22px) 18px calc(env(safe-area-inset-bottom) + 40px)}
+  .h-title{font-size:24px;font-weight:800;letter-spacing:-.02em;color:#16181d}
+  .h-sub{color:#6b7178;font-size:13px;margin-top:4px}
+  .series{margin-top:26px}
+  .s-head{display:flex;align-items:center;gap:9px;border-bottom:3px solid;padding-bottom:7px;margin-bottom:13px}
+  .s-head h2{font-size:16px;font-weight:800}
+  .s-head .sub{font-weight:500;color:#6b7178}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .weeks{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .wcard{border:none;border-radius:12px;padding:12px 13px;color:#fff;text-align:left;
+         min-height:108px;display:flex;flex-direction:column;justify-content:flex-start;
+         cursor:pointer;transition:transform .1s}
+  .wcard:active{transform:scale(.95)}
+  .wcard .wk{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;opacity:.85}
+  .wcard .wt{font-size:12.5px;font-weight:700;line-height:1.25;margin-top:3px}
+  .wcard .cnt{font-size:9.5px;opacity:.8;margin-top:auto;padding-top:8px;font-weight:600}
+
+  /* ---------- VIEWER ---------- */
+  #viewer{position:fixed;inset:0;background:#0f1115;display:none;flex-direction:column;
+          padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+  #viewer.on{display:flex}
+  .v-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 6px;color:#fff;flex:none}
+  .v-back{background:none;border:none;color:rgba(255,255,255,.75);font-size:14px;font-weight:600;
+          display:flex;align-items:center;gap:5px;cursor:pointer;padding:6px 0}
+  .v-count{font-size:13px;color:rgba(255,255,255,.6);font-weight:600}
+
+  .stage{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:6px 14px 10px}
+  /* phone-sized card: real 3.5x6.22 aspect, capped width, centered */
+  .cardwrap{position:relative;aspect-ratio:350/622;height:min(100%,calc(min(92vw,380px) * 622 / 350));width:auto}
+  .flip{position:absolute;inset:0;perspective:1600px;cursor:pointer}
+  .flip-inner{position:relative;width:100%;height:100%;transition:transform .5s cubic-bezier(.4,.15,.2,1);
+              transform-style:preserve-3d}
+  .flip.flipped .flip-inner{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;-webkit-backface-visibility:hidden;backface-visibility:hidden;
+        border-radius:22px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+
+  /* front (cover) */
+  .front{color:#fff;padding:30px 26px;display:flex;flex-direction:column;justify-content:space-between}
+  .front .s-name{font-size:26px;font-weight:800;line-height:1.05;letter-spacing:-.01em}
+  .front .s-sub{font-size:15px;font-weight:600;opacity:.92;margin-top:5px}
+  .front .wk-line{font-size:12px;font-weight:600;opacity:.85;margin-top:10px}
+  .front .f-bottom{display:flex;align-items:flex-end;justify-content:space-between}
+  .front .sec{font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;max-width:62%}
+  .front .num{text-align:right;line-height:.9}
+  .front .num b{font-size:52px;font-weight:800}
+  .front .num i{font-style:normal;font-size:14px;font-weight:600;opacity:.8}
+  .front .tap-hint{position:absolute;bottom:12px;left:0;right:0;text-align:center;font-size:10px;
+                   letter-spacing:.14em;text-transform:uppercase;opacity:.5}
+
+  /* back (content) */
+  .back{background:#fff;transform:rotateY(180deg);display:flex;flex-direction:column;padding:24px 22px}
+  .b-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:9px;
+          font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding-bottom:9px;border-bottom:2px solid}
+  .b-head .r{flex:none}
+  .b-title{font-size:20px;font-weight:800;margin:15px 0 13px}
+  .b-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;font-size:15px;line-height:1.45;padding-right:2px}
+  .kv{margin-bottom:14px}
+  .kv .k{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
+  .kv .v{font-size:15px;font-weight:500}
+  .qrow{position:relative;padding:0 0 13px 30px}
+  .qrow .qn{position:absolute;left:0;top:1px;width:21px;height:21px;border-radius:50%;color:#fff;
+            font-size:10px;font-weight:700;text-align:center;line-height:21px}
+  .qsub{position:relative;padding:0 0 11px 44px;color:#3c4048}
+  .qsub:before{content:"\2013";position:absolute;left:30px;top:0;font-weight:700}
+  .prose{font-size:16px;line-height:1.5}
+  .blank{color:#9aa0a6;font-style:italic;border:1px dashed #cdd2d8;border-radius:8px;padding:10px 12px}
+  .b-foot{flex:none;margin-top:10px;font-size:8px;font-weight:700;text-transform:uppercase;
+          letter-spacing:.16em;color:#b6bcc4}
+
+  .v-nav{display:flex;align-items:center;justify-content:center;gap:8px;padding:4px 16px 12px;flex:none}
+  .pip{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.28)}
+  .pip.on{background:#fff}
+  .arrow{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;
+         background:rgba(255,255,255,.12);border:none;color:#fff;font-size:20px;cursor:pointer;z-index:5;
+         display:flex;align-items:center;justify-content:center}
+  .arrow:active{background:rgba(255,255,255,.25)}
+  .arrow.prev{left:6px}.arrow.next{right:6px}
+  .arrow[disabled]{opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+  <div id="home"></div>
+
+  <div id="viewer">
+    <div class="v-top">
+      <button class="v-back" onclick="closeViewer()">&#8592; All cards</button>
+      <div class="v-count" id="vcount"></div>
+    </div>
+    <div class="stage" id="stage">
+      <div class="cardwrap" id="cardwrap">
+        <button class="arrow prev" id="prev" onclick="nav(-1)">&#8249;</button>
+        <button class="arrow next" id="next" onclick="nav(1)">&#8250;</button>
+        <div class="flip" id="flip">
+          <div class="flip-inner">
+            <div class="face front" id="front"></div>
+            <div class="face back" id="back"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="v-nav" id="pips"></div>
+  </div>
+
+<script>
+const DATA = {"series":[{"title":"One At A Time","subtitle":"","c1":"#0EA5B7","c2":"#0B7C8A","weeks":[{"week":1,"title":"The Vision of Our Church in the Life of Jesus","cards":[{"n":1,"section":"Intro","label":"Overview","kind":"intro","body":[["Passage","Mark 5:21-43"],["Key Takeaway","Jesus loved people one at a time—so should we!"],["Call to Action","Find one person that you know who is far from Jesus and commit to loving them."]],"total":6},{"n":2,"section":"Personal","label":"Personal Questions","kind":"list","body":["1. Have you ever been so focused on a task that nothing could stop you from doing it?","2. What is something that you would drop anything, no matter how important, to do?"],"total":6},{"n":3,"section":"Biblical","label":"Biblical Questions","kind":"list","body":["1. Read Mark 5:21-43.","What words, ideas, or phrases stick out to you from these verses?","What questions do you have about these verses?","2. Reread Mark 5:21-24. Jesus is surrounded by people, but He chooses to help Jairus. Why just one person?","3. Reread Mark 5:24-34. Jesus let Himself be interrupted by stopping here. Why do think this is?"],"total":6},{"n":4,"section":"Applicable","label":"Applicable Questions","kind":"list","body":["1. Can you think of one person to commit to loving so they can better know Jesus? Who is it?","2. How can you take intentional steps toward loving people one at a time?"],"total":6},{"n":5,"section":"Prayer","label":"Prayer Prompt","kind":"text","body":"“God, thank you for loving me. Give me the eyes to see one person that doesn’t know you and help me to love them.”","total":6},{"n":6,"section":"Challenge","label":"Personal Challenge","kind":"text","body":"Pray every day for the next week for God to give you one person to intentionally love.","total":6}]},{"week":2,"title":"One Party at a Time","cards":[{"n":1,"section":"Intro","label":"Overview","kind":"intro","body":[["Passage","Luke 14:12-24"],["Key Takeaway","Jesus invites everyone to the party, and it is up to us to extend the invitation."],["Call to Action","Make room in community to invite the Lost in and let them be loved."]],"total":6},{"n":2,"section":"Personal","label":"Personal Questions","kind":"list","body":["1.\tWhat is your favorite birthday party you had growing up?","2.\tHow would you have felt if nobody you had invited had shown up?"],"total":6},{"n":3,"section":"Biblical","label":"Biblical Questions","kind":"list","body":["1. Read Luke 14:12-24.","What words, ideas, or phrases stick out to you from these verses?","What questions do you have about these verses?","2.\tReread Luke 14:16-20. Why were people rejecting the invitation to the feast?","3.\tReread Luke 14:21-24. Who does Jesus say should be invited instead?"],"total":6},{"n":4,"section":"Applicable","label":"Applicable Questions","kind":"list","body":["1.\tWhat are some excuses you might be using to avoid God’s invitation?","2.\tWho is someone that you could make the effort to reach out to and invite to the party?"],"total":6},{"n":5,"section":"Prayer","label":"Prayer Prompt","kind":"text","body":"“God, thank you for inviting me to your great party. Help me see the people who don’t know that they are invited and extend the invite to them.”","total":6},{"n":6,"section":"Challenge","label":"Personal Challenge","kind":"text","body":"Plan a hang-out as a group and invite someone who doesn’t yet know Jesus.","total":6}]},{"week":3,"title":"One Prayer at a Time","cards":[{"n":1,"section":"Intro","label":"Overview","kind":"intro","body":[["Passage","Luke 18:1-8"],["Key Takeaway","We can love people one at a time by persistently praying for them."],["Call to Action","Pray consistently and intentionally that those who are lost come to know Jesus."]],"total":6},{"n":2,"section":"Personal","label":"Personal Questions","kind":"list","body":["1. How do you feel when you think of prayer?","2. Why do you think God sometimes waits longer to answer prayers?"],"total":6},{"n":3,"section":"Biblical","label":"Biblical Questions","kind":"list","body":["1. Read Luke 18:1-8.","What words, ideas, or phrases stick out to you from these verses?","What questions do you have about these verses?","2. Reread Luke 18:1. What does this say this parable means?","3. Reread Luke 18:6-8. How does this say that God will answer prayers?"],"total":6},{"n":4,"section":"Applicable","label":"Applicable Questions","kind":"list","body":["1. Who is one person who you can commit to praying for?","2. How can you build better prayer rhythms to bring your requests to God more often?"],"total":6},{"n":5,"section":"Prayer","label":"Prayer Prompt","kind":"text","body":"“God, thank you for hearing my prayers. Listen as I call out to you, and reveal yourself to my One”","total":6},{"n":6,"section":"Challenge","label":"Personal Challenge","kind":"text","body":"Set a reminder to pray for your One every day.","total":6}]},{"week":4,"title":"One Conversation at a Time","cards":[{"n":1,"section":"Intro","label":"Overview","kind":"intro","body":[["Passage","John 4:1-45"],["Key Takeaway","We can love people one at a time by having out-of-the-ordinary conversations with them."],["Call to Action","Be willing to have conversations with those you normally avoid and make room to tell them about Jesus."]],"total":6},{"n":2,"section":"Personal","label":"Personal Questions","kind":"list","body":["1.\tWhy is it difficult to talk to people outside of our circle?","2.\tWhat kind of people do we typically avoid talking to?"],"total":6},{"n":3,"section":"Biblical","label":"Biblical Questions","kind":"list","body":["1. Read John 4:1-45.","What words, ideas, or phrases stick out to you from these verses?","What questions do you have about these verses?","2.\tReread John 4:7-9. Why would Jesus go out of His way to talk to someone He was supposed to avoid?","3.\tReread John 4:25-26. This is the first time Jesus told anyone He was the Messiah. Why might He have told a Samaritan woman of all people?"],"total":6},{"n":4,"section":"Applicable","label":"Applicable Questions","kind":"list","body":["1.\tWho is one person that you can reach out to and share the good news of Jesus?","2.\tHow can you cross over borders and break down barriers that might prevent people from hearing about Jesus?"],"total":6},{"n":5,"section":"Prayer","label":"Prayer Prompt","kind":"text","body":"“God, thank you for being willing to reach me with your love. Help me to reach those who don’t know you, even if it means me getting uncomfortable. Amen.”","total":6},{"n":6,"section":"Challenge","label":"Personal Challenge","kind":"text","body":"Have one conversation that might be outside of your comfort zone with someone who does not know Jesus.","total":6}]},{"week":5,"title":"One Meal at a Time","cards":[{"n":1,"section":"Intro","label":"Overview","kind":"intro","body":[["Passage","Luke 19:1-10"],["Key Takeaway","Intimate and intentional gatherings set the stage for redemption."],["Call to Action","Open up your tables and time to meet with someone and share the love of Jesus."]],"total":6},{"n":2,"section":"Personal","label":"Personal Questions","kind":"list","body":["1. If you could share a meal with any person throughout history, who would it be?","2. Why do you think that some of the best conversations happen when sharing a meal?"],"total":6},{"n":3,"section":"Biblical","label":"Biblical Questions","kind":"list","body":["1. Read Luke 19:1-10.","What words, ideas, or phrases stick out to you from these verses?","What questions do you have about these verses?","1. Reread Luke 19:5-6. How did Zacchaeus react to Jesus inviting Himself into his home? How did the crowd react? Why do you think this is?","2. Read Acts 2:42-47. The early church in Acts shared many meals together. What does this passage say about the effect that this had on people who witnessed them?"],"total":6},{"n":4,"section":"Applicable","label":"Applicable Questions","kind":"list","body":["1. Who are some people that you wouldn’t normally share a meal with? How can you go out of your way to open up a table to share with them?","2. It is super easy to make excuses for why you don’t want to share a meal with someone. What are some excuses you can surrender to God so that you can love people better?"],"total":6},{"n":5,"section":"Prayer","label":"Prayer Prompt","kind":"text","body":"“God, thank you for intentionally meeting me wherever I am at. Be with me as I seek to love people by creating intentional intimate spaces to meet with them around tables.”","total":6},{"n":6,"section":"Challenge","label":"Personal Challenge","kind":"text","body":"One day this week, look for someone who is sitting alone at lunch. Go and sit with them, or invite them to join your table.","total":6}]},{"week":6,"title":"One Need at a Time","cards":[{"n":1,"section":"Intro","label":"Overview","kind":"intro","body":[["Passage","Matthew 4:23-25"],["Key Takeaway","We can love people one at a time by meeting their needs."],["Call to Action","Find ways to meet needs."]],"total":6},{"n":2,"section":"Personal","label":"Personal Questions","kind":"list","body":["1. If you could solve one problem in the world with a snap of your fingers, what would it be?","2. What are some things that you might be cautious or scared of asking for help with?"],"total":6},{"n":3,"section":"Biblical","label":"Biblical Questions","kind":"list","body":["1. Read Matthew 4:23-25.","What words, ideas, or phrases stick out to you from these verses?","What questions do you have about these verses?","1. Reread Matthew 4:23-25. What sorts of needs does Jesus meet? What does this tell you about the kingdom of heaven?","2. Read Matthew 15:29-31. The passage from tonight is not the only time Jesus did this! What does this tell you about Jesus’ ministry?"],"total":6},{"n":4,"section":"Applicable","label":"Applicable Questions","kind":"list","body":["1. What normally keeps you from helping meet the needs of others?","2. What are some ways that you have been gifted to help meet the needs of others?"],"total":6},{"n":5,"section":"Prayer","label":"Prayer Prompt","kind":"text","body":"“God, thank you for meeting my greatest need of all in Jesus. Strengthen me to meet the needs of others wherever I see them.”","total":6},{"n":6,"section":"Challenge","label":"Personal Challenge","kind":"text","body":"Look for one need around home and figure out a way to help out!","total":6}]}]},{"title":"Churchy Words","subtitle":"The Unholy Trinity","c1":"#6D4AE0","c2":"#4A2FB0","weeks":[{"week":1,"title":"The Flesh","cards":[{"n":1,"section":"Intro","label":"Overview","kind":"intro","body":[["Passage","James 1:13-15; Galatians 5:16-17"],["Key Takeaway","Our biggest enemy is often our own desires—but the Spirit gives us the power to win the fight."],["Call to Action","Name one sinful desire you keep giving in to, and this week practice walking away from it in step with the Spirit."]],"total":6},{"n":2,"section":"Personal","label":"Personal Questions","kind":"list","body":["1. Have you ever done something that felt good in the moment, but ended up not being good for you? Give an example.","2. Does it ever feel like you are fighting yourself for what you want to do?"],"total":6},{"n":3,"section":"Biblical","label":"Biblical Questions","kind":"list","body":["1. Read James 1:13-15","What words, ideas, or phrases stick out to you from these verses?","What questions do you have about these verses?","2. If our desires can give birth to sin, how do we prevent ungodly desires from growing?","3. Read Galatians 5:16-17. How does this say we can keep from doing what we don’t want to do?"],"total":6},{"n":4,"section":"Applicable","label":"Applicable Questions","kind":"list","body":["1. Where are you holding on to ungodly desires?","2. What are some ways to walk in step with the Spirit?"],"total":6},{"n":5,"section":"Prayer","label":"Prayer Prompt","kind":"text","body":"“God, thank you for saving me from myself. Help me to always walk in step with you.”","total":6},{"n":6,"section":"Challenge","label":"Personal Challenge","kind":"text","body":"Pray every day for the Holy Spirit’s help to walk away from sinful desires.","total":6}]},{"week":2,"title":"The World","cards":[{"n":1,"section":"Intro","label":"Overview","kind":"intro","body":[["Passage","James 4:1-10; 1 John 2:15-17"],["Key Takeaway","You can’t be best friends with the world and with God—choose God."],["Call to Action","Identify one way you’ve been chasing the world’s approval and trade it for a habit that draws you closer to God."]],"total":6},{"n":2,"section":"Personal","label":"Personal Questions","kind":"list","body":["1. What is a hot take you have that your friends would disagree with?","2. Have you every known the right thing to do, but felt pressure to do the opposite? Explain."],"total":6},{"n":3,"section":"Biblical","label":"Biblical Questions","kind":"list","body":["1. Read James 4:1-10","What words, ideas, or phrases stick out to you from these verses?","What questions do you have about these verses?","2. Reread James 4:4. What does this say about how we relate to God?","3. Reread James 4:10. Instead of being friends of the world, how do we become friends with God?"],"total":6},{"n":4,"section":"Applicable","label":"Applicable Questions","kind":"list","body":["1. Can you name any areas where you are a friend of the world?","2. What is a way that you can grow in friendship with God?"],"total":6},{"n":5,"section":"Prayer","label":"Prayer Prompt","kind":"text","body":"“God, thank you for not leaving me alone in this broken world. Help me to live as your friend in everything I do.”","total":6},{"n":6,"section":"Challenge","label":"Personal Challenge","kind":"text","body":"Examine your habits and identify one way you might be living for the world.","total":6}]},{"week":3,"title":"The Devil","cards":[{"n":1,"section":"Intro","label":"Overview","kind":"intro","body":[["Passage","James 4:7-8; Ephesians 6:10-18"],["Key Takeaway","The devil is real, but when we submit to God and resist him, he flees."],["Call to Action","Pick the piece of God’s armor you’re weakest in, and ask God to strengthen you there this week."]],"total":6},{"n":2,"section":"Personal","label":"Personal Questions","kind":"list","body":["1. When you think of the devil, what comes to mind?","2. Where do you struggle resisting temptation?"],"total":6},{"n":3,"section":"Biblical","label":"Biblical Questions","kind":"list","body":["1. Read James 4:7-8.","What words, ideas, or phrases stick out to you from these verses?","What questions do you have about these verses?","2. How does this say we should react when the devil tempts us?","3. Read Galatians 6:13-18. What tools do we have from God to defend ourselves against attacks from the devil?"],"total":6},{"n":4,"section":"Applicable","label":"Applicable Questions","kind":"list","body":["1. What is an area of your life you need to submit to God?","2. Which part of the ‘armor of God’ do you need to grow in?"],"total":6},{"n":5,"section":"Prayer","label":"Prayer Prompt","kind":"text","body":"“God, thank you for giving me what I need to resist the devil. Give me strength to continue to resist temptation, and to live for you always.”","total":6},{"n":6,"section":"Challenge","label":"Personal Challenge","kind":"text","body":"Read James 4:7 and pray for the strength to submit to God and resist the devil.","total":6}]},{"week":4,"title":"Heaven & Hell","cards":[{"n":1,"section":"Intro","label":"Overview","kind":"intro","body":[["Passage","James 1:12-15 - dichotomy between the “crown of life” and sin that leads to death"],["Key Takeaway","Eternity is real, and God is inviting you—and the people around you—into life with Him forever."],["Call to Action","Respond to God’s invitation for yourself, then start one conversation with someone who needs to hear it."]],"total":6},{"n":2,"section":"Personal","label":"Personal Questions","kind":"list","body":["1. When you think of forever, what do you think of?","2. How does talking about heaven and hell make you feel?"],"total":6},{"n":3,"section":"Biblical","label":"Biblical Questions","kind":"list","body":["1. Read James 1:12-15","What words, ideas, or phrases stick out to you from these verses?","What questions do you have about these verses?","2. Reread James 1:12. What does God promise to those who love Him?","3. Jesus tells a story about judgement in Matthew 13:47-50. What kind of picture does this paint?"],"total":6},{"n":4,"section":"Applicable","label":"Applicable Questions","kind":"list","body":["1. Do you need to respond to the invitation to the kingdom of heaven?","2. Do you know anyone who needs to hear this news? How can you start that conversations?"],"total":6},{"n":5,"section":"Prayer","label":"Prayer Prompt","kind":"text","body":"“God, thank you for making a way for me to be with you. Help me live a life that points others toward you so that they can also experience eternal life.”","total":6},{"n":6,"section":"Challenge","label":"Personal Challenge","kind":"text","body":"Set a timer for 10 minutes and talk to God. Honestly evaluate your standing with Him. Explore what it might look like to move deeper into life with Him.","total":6}]}]},{"title":"Beyond Boring","subtitle":"","c1":"#F2790C","c2":"#C25A00","weeks":[{"week":1,"title":"","cards":[{"n":1,"section":"Intro","label":"Overview","kind":"intro","body":[["Passage","Joshua 1:1-18"],["Key Takeaway","A faith that trusts God completely is anything but boring."],["Call to Action","Name one obstacle keeping your faith “boring” and take one concrete step to trust God with it this week."]],"total":6},{"n":2,"section":"Personal","label":"Personal Questions","kind":"list","body":["1. How do you react when you feel bored?","2. How would you categorize your relationship with God: boring or beyond boring? Why?"],"total":6},{"n":3,"section":"Biblical","label":"Biblical Questions","kind":"list","body":["1. Read Joshua 1:1-18.","What words, ideas, or phrases stick out to you from these verses?","What questions do you have about these verses?","2. What are some of the promises God makes Israel?","3. Reread Joshua 1:16. How did Israel react when they heard the promises of God?"],"total":6},{"n":4,"section":"Applicable","label":"Applicable Questions","kind":"list","body":["1. What are some obstacles keeping you from living a faith that is being boring?","2. What are some ways that God may be calling you to put your faith in Him and trust Him more completely?"],"total":6},{"n":5,"section":"Prayer","label":"Prayer Prompt","kind":"text","body":"“God, thank you for calling me to deeper faith. Be with me as I step out in faith and learn to trust you more.”","total":6},{"n":6,"section":"Challenge","label":"Personal Challenge","kind":"text","body":"Schedule a time this week to evaluate your relationship with God. Ask God where you need to trust Him more.","total":6}]},{"week":2,"title":"","cards":[{"n":1,"section":"Intro","label":"Overview","kind":"intro","body":[["Passage","Joshua 3:1-17"],["Key Takeaway","Remembering what God has already done gives us faith to step into what He’ll do next."],["Call to Action","Write down three times God showed up for you, and let them push you into one new step of faith."]],"total":6},{"n":2,"section":"Personal","label":"Personal Questions","kind":"list","body":["1. When you are bored, what is your favorite thing to do to break the boredom?","2. If you were trapped in a room without those options, how would you pass the time?"],"total":6},{"n":3,"section":"Biblical","label":"Biblical Questions","kind":"list","body":["1. Read Joshua 3:1-17.","What words, ideas, or phrases stick out to you from these verses?","What questions do you have about these verses?","2. How do you think the Israelites reacted when they crossed the river on dry ground?","3. How do you think it impacted how they thought about what God could do?"],"total":6},{"n":4,"section":"Applicable","label":"Applicable Questions","kind":"list","body":["1. What does look like for you to have faith that is beyond boring?","2. What is a way that you can actively step into that this week?"],"total":6},{"n":5,"section":"Prayer","label":"Prayer Prompt","kind":"text","body":"“God, thank you for the amazing ways you have worked in my life. As I remember what you have done for me, inspire me to greater faith.”","total":6},{"n":6,"section":"Challenge","label":"Personal Challenge","kind":"text","body":"Set a timer for 3 minutes and write out times you can remember God showing up for you. After, write out ways you can respond in reaction to His actions.","total":6}]},{"week":3,"title":"","cards":[{"n":1,"section":"Intro","label":"Overview","kind":"intro","body":[["Passage","Joshua 6:1-20"],["Key Takeaway","Following God will sometimes make you stand out—and that’s exactly the point."],["Call to Action","Do one thing this week that shows your faith even if it feels weird—like inviting someone new to church."]],"total":6},{"n":2,"section":"Personal","label":"Personal Questions","kind":"list","body":["1. What is something you do that other people think is weird?","2. Does that ever impact how you act?"],"total":6},{"n":3,"section":"Biblical","label":"Biblical Questions","kind":"list","body":["1. Read Joshua 6:1-20.","What words, ideas, or phrases stick out to you from these verses?","What questions do you have about these verses?","2. Reread Joshua 6:2-5. What does God command Joshua?","3. Why would God command something that might not make sense?"],"total":6},{"n":4,"section":"Applicable","label":"Applicable Questions","kind":"list","body":["1. What is one way your faith in Jesus might cause you to stand out among the rest of your peers?","2. How does it help knowing that you aren’t alone?"],"total":6},{"n":5,"section":"Prayer","label":"Prayer Prompt","kind":"text","body":"“God, thank you for putting people around me to strengthen me in my faith. As I seek to grow in community, help me to grow in confidence and boldness.”","total":6},{"n":6,"section":"Challenge","label":"Personal Challenge","kind":"text","body":"Even though it might feel weird, invite one new person to church.","total":6}]},{"week":4,"title":"","cards":[{"n":1,"section":"Intro","label":"Overview","kind":"intro","body":[["Passage","Joshua 24:11-24"],["Key Takeaway","Don’t settle for a borrowed faith—choose today to make it your own."],["Call to Action","Decide one area where you’ll personally follow Jesus, and name the legacy of faith you want to leave."]],"total":6},{"n":2,"section":"Personal","label":"Personal Questions","kind":"list","body":["1. Are there any characteristics, values, traditions, or principles that your parents or grandparents have passed on to you?","2. How has this influenced how you have lived your life?"],"total":6},{"n":3,"section":"Biblical","label":"Biblical Questions","kind":"list","body":["1. Read Joshua 24:11-24.","What words, ideas, or phrases stick out to you from these verses?","What questions do you have about these verses?","2. Joshua reminds Israel what the Lord had done for them up to this point. How can remembering help when we are looking forward?","3. Reread Joshua 14:19. Joshua says “You are not able to serve the Lord.” What do you think he means by this?"],"total":6},{"n":4,"section":"Applicable","label":"Applicable Questions","kind":"list","body":["1. What kind of legacy do you want to leave? What kind of influence do you want to have? What kind of impact do you want to make? Think about how your faith plays into this...","2. What are the steps you need to take to work toward that? What decisions do you need to make? What do you need to surrender to God? Have you made the decision to personally follow Jesus?"],"total":6},{"n":5,"section":"Prayer","label":"Prayer Prompt","kind":"text","body":"“God, thank you for showing me your faithfulness. As I own my own faith, help me not settle for a boring faith, but to walk in a faith that is more active and fulfilling.”","total":6},{"n":6,"section":"Challenge","label":"Personal Challenge","kind":"text","body":"Read Hebrews Chapter 11:1-12:2. Examine the different stories of lasting faith. Pray, asking God to show you how you can grow toward that kind of faith.","total":6}]}]},{"title":"At The Table","subtitle":"","c1":"#1F9D57","c2":"#127a41","weeks":[{"week":1,"title":"People Who Hate God","cards":[{"n":1,"section":"Intro","label":"Overview","kind":"intro","body":[["Passage","Acts 8:4-13"],["Key Takeaway","God loved us while we were still far from Him—so we can love people who are far from Him too."],["Call to Action","Think of someone who doesn’t love God and find one specific way to show them His love this week."]],"total":6},{"n":2,"section":"Personal","label":"Personal Questions","kind":"list","body":["1. What are some of your biggest pet-peeves that drive you crazy?","2. What are some things that YOU do that drive other people crazy?"],"total":6},{"n":3,"section":"Biblical","label":"Biblical Questions","kind":"list","body":["1. Read Acts 8:4-13","What words, ideas, or phrases stick out to you from these verses?","What questions do you have about these verses?","2.What did you think Simon the Sorcerer cared about the most- God or the world?","3. Read 1 John 2:15. What does the Bible say about people who love the world?"],"total":6},{"n":4,"section":"Applicable","label":"Applicable Questions","kind":"list","body":["1. How does God feel about people who hate Him? (Hint: read Romans 5:8)","2. How does that change the way you view, treat, speak to, encourage, and reach people far from God?"],"total":6},{"n":5,"section":"Prayer","label":"Prayer Prompt","kind":"text","body":"“God, thank you for loving me, even when I don’t deserve it. Help me to be a loved presence and to show others, even those who hate you, your love.”","total":6},{"n":6,"section":"Challenge","label":"Personal Challenge","kind":"text","body":"Think of someone you know who does not love God. Find one way that you can show them the love of God this week.","total":6}]},{"week":2,"title":"People Who Hate Me","cards":[{"n":1,"section":"Intro","label":"Overview","kind":"intro","body":[["Passage","Acts 9:1-19"],["Key Takeaway","The people who reject you today could be God’s chosen instruments tomorrow."],["Call to Action","Pray each day this week for someone who’s been unkind to you, and look for a way to love them."]],"total":6},{"n":2,"section":"Personal","label":"Personal Questions","kind":"list","body":["1. Have you ever started to like a specific food that you used to hate? What was it?","2. What did it take for you to try it again?"],"total":6},{"n":3,"section":"Biblical","label":"Biblical Questions","kind":"list","body":["1. Read Acts 9:1-19","What words, ideas, or phrases stick out to you from these verses?","What questions do you have about these verses?","2. Reread Acts 9:15. What do you think God meant by “chosen instrument”?","3. How would our view of people change if we saw them as God’s chosen instruments?"],"total":6},{"n":4,"section":"Applicable","label":"Applicable Questions","kind":"list","body":["1. Is there anyone that you need to reframe in your mind as a “chosen instrument”?","2. How can you react to people who don’t accept you in a loving way?"],"total":6},{"n":5,"section":"Prayer","label":"Prayer Prompt","kind":"text","body":"“God, thank you for loving me. Help me to walk blamelessly and help me to lovingly reach out to those who may hate me.”","total":6},{"n":6,"section":"Challenge","label":"Personal Challenge","kind":"text","body":"Set a reminder for each day this week to pray for the opportunity to love those who may hate you.","total":6}]},{"week":3,"title":"People I Hate","cards":[{"n":1,"section":"Intro","label":"Overview","kind":"intro","body":[["Passage","Acts 10:34-48"],["Key Takeaway","God shows no favoritism—so we don’t get to pick and choose who we love."],["Call to Action","List the people you struggle to get along with, and next to each name write one way you’ll love them."]],"total":6},{"n":2,"section":"Personal","label":"Personal Questions","kind":"list","body":["1. Have you ever had a family member, friend, or classmate that you have a hard time getting along with?","2. How does this impact how you treat them?"],"total":6},{"n":3,"section":"Biblical","label":"Biblical Questions","kind":"list","body":["1. Read Acts 10:34-48.","What words, ideas, or phrases stick out to you from these verses?","What questions do you have about these verses?","2. Reread Acts 10:34. What does it mean that “God shows no favoritism?”","3. How does knowing that God shows no favoritism change the way we interact with people, especially the people we dislike?"],"total":6},{"n":4,"section":"Applicable","label":"Applicable Questions","kind":"list","body":["1. How does knowing that God shows no favoritism change the way we interact with people, especially the people we dislike?","2. Why do you think Jesus calls us to love people we don’t like? How can we begin to love people who are hard for us to love?"],"total":6},{"n":5,"section":"Prayer","label":"Prayer Prompt","kind":"text","body":"“God, thank you for showing me your love, even though I don’t deserve it. Help me to love everyone even if I don’t feel like it.”","total":6},{"n":6,"section":"Challenge","label":"Personal Challenge","kind":"text","body":"Write out a list of people that you don’t get along with. Beside each name, write one way that you can love them.","total":6}]}]}]};
+
+/* ---------- HOME ---------- */
+function esc(s){return (s==null?'':String(s)).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function renderHome(){
+  let h = '<div class="h-title">Small Group Cards</div>'
+        + '<div class="h-sub">Southeast Students</div>';
+  DATA.series.forEach((s,si)=>{
+    h += '<div class="series"><div class="s-head" style="border-color:'+s.c1+'">'
+       + '<span class="dot" style="background:'+s.c1+'"></span>'
+       + '<h2>'+esc(s.title)+(s.subtitle?' <span class="sub">&middot; '+esc(s.subtitle)+'</span>':'')+'</h2></div>'
+       + '<div class="weeks">';
+    s.weeks.forEach((w,wi)=>{
+      h += '<button class="wcard" style="background:linear-gradient(150deg,'+s.c1+','+s.c2+')" '
+         + 'onclick="openViewer('+si+','+wi+')">'
+         + '<div><div class="wk">Week '+w.week+'</div>'
+         + '<div class="wt">'+esc(w.title||('Week '+w.week))+'</div></div>'
+         + '<div class="cnt">'+w.cards.length+' cards</div></button>';
+    });
+    h += '</div></div>';
+  });
+  document.getElementById('home').innerHTML = h;
+}
+
+/* ---------- VIEWER ---------- */
+let cur = {si:0, wi:0, ci:0};
+function S(){return DATA.series[cur.si];}
+function W(){return S().weeks[cur.wi];}
+function C(){return W().cards[cur.ci];}
+
+function openViewer(si,wi){ cur={si,wi,ci:0}; document.getElementById('viewer').classList.add('on'); renderCard(); }
+function closeViewer(){ document.getElementById('viewer').classList.remove('on'); }
+
+function frontHTML(){
+  const s=S(), w=W(), c=C();
+  return '<div><div class="s-name">'+esc(s.title)+'</div>'
+       + (s.subtitle?'<div class="s-sub">'+esc(s.subtitle)+'</div>':'')
+       + '<div class="wk-line">Week '+w.week+(w.title?' &middot; '+esc(w.title):'')+'</div></div>'
+       + '<div class="f-bottom"><div class="sec">'+esc(c.label)+'</div>'
+       + '<div class="num"><b>'+c.n+'</b><i>/'+c.total+'</i></div></div>'
+       + '<div class="tap-hint">tap to read</div>';
+}
+function bodyHTML(c){
+  if(c.kind==='intro'){
+    return '<div>'+c.body.map(([k,v])=>{
+      const blank=!(v&&String(v).trim());
+      return '<div class="kv"><div class="k" style="color:'+S().c2+'">'+esc(k)+'</div>'
+           + '<div class="v'+(blank?' blank':'')+'">'+(blank?'To be added':esc(v))+'</div></div>';
+    }).join('')+'</div>';
+  }
+  if(c.kind==='list'){
+    if(!c.body.length) return '<div class="blank">To be added</div>';
+    return c.body.map(q=>{
+      const m=String(q).match(/^\s*(\d+)[.)]\s*(.*)$/);
+      if(m) return '<div class="qrow"><span class="qn" style="background:'+S().c1+'">'+m[1]+'</span>'+esc(m[2])+'</div>';
+      return '<div class="qsub">'+esc(q)+'</div>';
+    }).join('');
+  }
+  // text
+  const raw=(c.body||'').toString().replace(/^["“”]+|["“”]+$/g,'').trim();
+  if(!raw) return '<div class="prose blank">To be added</div>';
+  const t = c.section==='Prayer' ? '“'+esc(raw)+'”' : esc(raw);
+  return '<div class="prose">'+t+'</div>';
+}
+function backHTML(){
+  const s=S(), w=W(), c=C();
+  return '<div class="b-head" style="border-color:'+s.c1+';color:'+s.c2+'">'
+       + '<div class="l">Week '+w.week+(w.title?' &middot; '+esc(w.title):'')+'</div>'
+       + '<div class="r">'+c.n+'/'+c.total+'</div></div>'
+       + '<div class="b-title">'+esc(c.label)+'</div>'
+       + '<div class="b-body">'+bodyHTML(c)+'</div>'
+       + '<div class="b-foot">Southeast Students</div>';
+}
+function renderCard(){
+  const s=S(), w=W();
+  const flip=document.getElementById('flip');
+  flip.classList.remove('flipped');
+  document.getElementById('front').style.background='linear-gradient(150deg,'+s.c1+','+s.c2+')';
+  document.getElementById('front').innerHTML=frontHTML();
+  document.getElementById('back').innerHTML=backHTML();
+  document.getElementById('vcount').textContent='Week '+w.week+'  ·  '+(cur.ci+1)+'/'+w.cards.length;
+  // pips
+  document.getElementById('pips').innerHTML=w.cards.map((_,i)=>'<span class="pip'+(i===cur.ci?' on':'')+'"></span>').join('');
+  document.getElementById('prev').disabled = cur.ci===0;
+  document.getElementById('next').disabled = cur.ci===w.cards.length-1;
+}
+function nav(d){
+  const n=cur.ci+d;
+  if(n<0||n>=W().cards.length) return;
+  cur.ci=n; renderCard();
+}
+function flipCard(){ document.getElementById('flip').classList.toggle('flipped'); }
+
+/* tap vs swipe */
+let sx=0, sy=0, moved=false;
+const stage=document.getElementById('stage');
+stage.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;moved=false;},{passive:true});
+stage.addEventListener('touchmove',e=>{
+  if(Math.abs(e.touches[0].clientX-sx)>10||Math.abs(e.touches[0].clientY-sy)>10) moved=true;
+},{passive:true});
+stage.addEventListener('touchend',e=>{
+  if(e.target.closest('.arrow')) return;  // let the arrow's own handler run
+  const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+  if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)){ nav(dx<0?1:-1); }
+  else if(!moved){ flipCard(); }
+});
+document.getElementById('flip').addEventListener('click',e=>{ if(!('ontouchstart' in window)) flipCard(); });
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('viewer').classList.contains('on')) return;
+  if(e.key==='ArrowRight') nav(1);
+  else if(e.key==='ArrowLeft') nav(-1);
+  else if(e.key===' '||e.key==='Enter'){ flipCard(); e.preventDefault(); }
+  else if(e.key==='Escape') closeViewer();
+});
+
+renderHome();
+</script>
+</body>
+</html>
